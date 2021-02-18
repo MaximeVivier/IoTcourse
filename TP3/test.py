@@ -5,25 +5,72 @@ import sys
 import time
 import network
 
+"""---------------------------------Connection to router-------------------------------------------------"""
 # setup as a station
 wlan = network.WLAN(mode=network.WLAN.STA)
 
 #### MPD EFFACER -----------------------------------------------------------------------------------------
-wlan.connect('ssid', auth=(network.WLAN.WPA2, 'secret'))
+wlan.connect('ssid', auth=(network.WLAN.WPA2, 'password'))
 #### MPD EFFACER -----------------------------------------------------------------------------------------
 
 while not wlan.isconnected():
     time.sleep_ms(50)
 print(wlan.ifconfig())
 
-pycom.heartbeat(True)
+"""-------------------------------------GPS functions-------------------------------------------------"""
+
+def read_byte(add):
+    return i2c.readfrom(add,255).decode()
+
+def read_msg(frame):
+    messages = []
+    idx_end_of_incomplete_beginning = frame.find('\r\n')
+    if idx_end_of_incomplete_beginning == -1:
+        print('Empty')
+        return()
+    else:
+        print('Not empty')
+        incomplete_beginning = frame[:idx_end_of_incomplete_beginning] #incomplete message at the beginning of the frame
+        frame = frame[idx_end_of_incomplete_beginning:]
+
+        idx_begin = frame.find('$')
+        idx_end = frame.find('\r\n')
+        messages_remaining = (idx_begin !=-1 and idx_begin != -1) #tests if there are complete messages in the frame
+        while messages_remaining:
+            messages.append(frame[idx_begin+1:idx_end]) #adds the comlete message to the message list
+
+            frame = frame[idx_end+2:] #get rid of the detected message in the original frame
+            idx_begin = frame.find('$')
+            idx_end = frame.find('\r\n')
+            messages_remaining = (idx_begin !=-1 and idx_begin != -1) #tests if there will be a new one
+
+        if idx_begin !=-1:
+            incomplete_end = frame[idx_begin:-1]
+        else:
+            incomplete_end = None
+        #print('inc_beg',incomplete_beginning)
+        #print('inc_end',incomplete_end)
+        #print('msg',messages)
+        return(incomplete_beginning,incomplete_end,messages)
+
+"""------------------------------GPS instruction loop--------------------------------------------"""
 
 i2c = machine.I2C(0, mode=I2C.MASTER, pins=('P22', 'P21'))
 scan = i2c.scan()
+addr = scan[1]
 
+msg_list = []
+prev_inc_end = None
 while True:
-  trame = i2c.readfrom(scan[1],255)
-  print(trame)
-  print(trame.decode().replace('\n',''))
-  print('\n')
-  time.sleep_ms(500)
+    current_frame = read_byte(addr)
+    inc_beg, inc_end, complete_msgs = read_msg(current_frame)
+
+    if prev_inc_end != None:
+        msg_list.append(prev_inc_end+inc_beg)
+
+    for message in complete_msgs:
+        msg_list.append(message)
+
+    prev_inc_end = inc_end
+    print(msg_list)
+    time.sleep_ms(500)
