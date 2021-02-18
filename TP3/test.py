@@ -3,6 +3,18 @@ from machine import I2C
 import pycom
 import sys
 import time
+import network
+
+# setup as a station
+wlan = network.WLAN(mode=network.WLAN.STA)
+
+#### MPD EFFACER -----------------------------------------------------------------------------------------
+wlan.connect('ssid', auth=(network.WLAN.WPA2, 'secret'))
+#### MPD EFFACER -----------------------------------------------------------------------------------------
+
+while not wlan.isconnected():
+    time.sleep_ms(50)
+print(wlan.ifconfig())
 
 pycom.heartbeat(True)
 
@@ -14,4 +26,4 @@ while True:
   print(trame)
   print(trame.decode().replace('\n',''))
   print('\n')
-  time.sleep(0.2)
+  time.sleep_ms(500)
