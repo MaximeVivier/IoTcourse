@@ -17,7 +17,7 @@ def client_connect(clientsocket, latitude, longitude):
 
     http = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection:close \r\n\r\n"
     mapGPS =  '<html><head><meta charset="utf-8"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" /><style type="text/css">#map{height:400px;}</style><title>Carte</title></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script><script type="text/javascript">var lat =' + str(latitude) + ';var lon =' +str(longitude)+';var macarte = null;function initMap() {macarte = L.map(\'map\').setView([lat, lon], 11);L.tileLayer(\'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png\', {attribution: \'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>\',minZoom: 1,maxZoom: 20}).addTo(macarte);var marker = L.marker([lat, lon]).addTo(macarte);}window.onload = function(){initMap(); };</script></body></html>'
-    
+
     if "GET / " in str(r):
         clientsocket.send(http + mapGPS)
     clientsocket.close()
@@ -27,8 +27,7 @@ def client_connect(clientsocket, latitude, longitude):
 wlan = network.WLAN(mode=network.WLAN.STA)
 
 #### MPD EFFACER -----------------------------------------------------------------------------------------
-wlan.connect('Freebox-5FB8C7', auth=(network.WLAN.WPA2, 'hispanarum#&-orthodoxi*-ructent-eusebio*'))
-#wlan.connect('ssid', auth=(network.WLAN.WPA2, 'password'))
+wlan.connect('ssid', auth=(network.WLAN.WPA2, 'password'))
 #### MPD EFFACER -----------------------------------------------------------------------------------------
 
 while not wlan.isconnected():
