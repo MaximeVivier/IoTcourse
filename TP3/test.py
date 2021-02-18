@@ -81,5 +81,13 @@ while True:
     prev_inc_end = inc_end
 
     msg_list = select_msg_type(msg_list,MSG_TYPE)
-    print(msg_list)
+    if len(msg_list) > 0:                   # checks if list contains at least 1 message
+        new_msg = msg_list.pop().split(',') # then reads it
+        if len(new_msg)>5:                  # checks if the message contains at least latitude and longitude
+            if (new_msg[2] == '' or new_msg[3] == '' or new_msg[4] == '' or new_msg[5] == ''):  # checks if data is valid
+                print('No GPS data availale')
+            else:
+                coords = [new_msg[2],new_msg[3],new_msg[4],new_msg[5]]
+                print(coords)
+
     time.sleep_ms(500)
