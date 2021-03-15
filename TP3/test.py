@@ -1,10 +1,10 @@
 import machine
 from machine import I2C
-import pycom
-import sys
-import time
-import network
-import usocket
+import pycom, sys, time, network, usocket
+
+
+
+"""-------------------------------------Socket functions----------------------------------------------"""
 
 def client_connect(clientsocket, latitude, longitude):
 
@@ -21,35 +21,6 @@ def client_connect(clientsocket, latitude, longitude):
     if "GET / " in str(r):
         clientsocket.send(http + mapGPS)
     clientsocket.close()
-
-"""---------------------------------Connection to router-------------------------------------------------"""
-# setup as a station
-wlan = network.WLAN(mode=network.WLAN.STA)
-
-#### MPD EFFACER -----------------------------------------------------------------------------------------
-wlan.connect('ssid', auth=(network.WLAN.WPA2, 'password'))
-#### MPD EFFACER -----------------------------------------------------------------------------------------
-
-while not wlan.isconnected():
-    time.sleep_ms(500)
-    print("Wifi .. Connecting")
-print("Wifi Connected", wlan.ifconfig())
-
-s = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
-print("s", s)
-
-s.bind((wlan.ifconfig()[0], 8080))
-
-s.listen(1)
-
-while True:
-    # Accept the connection of the clients
-    (clientsocket, address) = s.accept()
-    client_connect(clientsocket, 43.311786, 5.4)
-    # Start a new thread to handle the client
-
-    time.sleep(1)
-s.close()
 
 """-------------------------------------GPS functions-------------------------------------------------"""
 
@@ -94,6 +65,27 @@ def select_msg_type(list,type):
             list_of_type.append(msg)
     return list_of_type
 
+"""---------------------------------Connection to router and socket-----------------------------------------"""
+# setup as a station
+wlan = network.WLAN(mode=network.WLAN.STA)
+
+#### MPD EFFACER -----------------------------------------------------------------------------------------
+wlan.connect('SSID', auth=(network.WLAN.WPA2, 'password'))
+#### MPD EFFACER -----------------------------------------------------------------------------------------
+
+while not wlan.isconnected():
+    time.sleep_ms(500)
+    print("Wifi .. Connecting")
+print("Wifi Connected", wlan.ifconfig())
+
+s = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
+print("s", s)
+
+s.bind((wlan.ifconfig()[0], 8080))
+
+s.listen(1)
+
+
 """--------------------------------GPS instruction loop-----------------------------------------"""
 
 i2c = machine.I2C(0, mode=I2C.MASTER, pins=('P22', 'P21'))
@@ -117,10 +109,15 @@ while True:
     if len(msg_list) > 0:                   # checks if list contains at least 1 message
         new_msg = msg_list.pop().split(',') # then reads it
         if len(new_msg)>5:                  # checks if the message contains at least latitude and longitude
+            #print(new_msg)
             if (new_msg[2] == '' or new_msg[3] == '' or new_msg[4] == '' or new_msg[5] == ''):  # checks if data is valid
-                print('No GPS data availale')
+                print('No GPS data available')
             else:
-                coords = [new_msg[2],new_msg[3],new_msg[4],new_msg[5]]
+                coords = [str(float(new_msg[2])/100),new_msg[3],str(float(new_msg[4])/100),new_msg[5]]
                 print(coords)
+                (clientsocket, address) = s.accept()
+                client_connect(clientsocket, coords[0], coords[2])
 
     time.sleep_ms(500)
+
+s.close()
