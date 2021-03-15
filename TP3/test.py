@@ -7,13 +7,12 @@ import pycom, sys, time, network, usocket
 """-------------------------------------Socket functions----------------------------------------------"""
 
 def client_connect(clientsocket, latitude, longitude):
-
     r = clientsocket.recv(4096)
     if len(r) == 0:
         clientsocket.close()
         return
     else:
-        print("Received: {}".format(str(r))) #uncomment this line to view the HTTP request
+        print("Received: {}".format(str(r)))
 
     http = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection:close \r\n\r\n"
     mapGPS =  '<html><head><meta charset="utf-8"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==" crossorigin="" /><style type="text/css">#map{height:400px;}</style><title>Carte</title></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js" integrity="sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==" crossorigin=""></script><script type="text/javascript">var lat =' + str(latitude) + ';var lon =' +str(longitude)+';var macarte = null;function initMap() {macarte = L.map(\'map\').setView([lat, lon], 11);L.tileLayer(\'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png\', {attribution: \'données © <a href="//osm.org/copyright">OpenStreetMap</a>/ODbL - rendu <a href="//openstreetmap.fr">OSM France</a>\',minZoom: 1,maxZoom: 20}).addTo(macarte);var marker = L.marker([lat, lon]).addTo(macarte);}window.onload = function(){initMap(); };</script></body></html>'
@@ -66,32 +65,33 @@ def select_msg_type(list,type):
     return list_of_type
 
 """---------------------------------Connection to router and socket-----------------------------------------"""
-# setup as a station
+# Connection au réseau WIFI en spécifiant le SSID et le mot de passe
 wlan = network.WLAN(mode=network.WLAN.STA)
 
-#### MPD EFFACER -----------------------------------------------------------------------------------------
 wlan.connect('SSID', auth=(network.WLAN.WPA2, 'password'))
-#### MPD EFFACER -----------------------------------------------------------------------------------------
 
 while not wlan.isconnected():
     time.sleep_ms(500)
     print("Wifi .. Connecting")
 print("Wifi Connected", wlan.ifconfig())
 
+# Une fois connecté au WIFI, on créé une socket
 s = usocket.socket(usocket.AF_INET, usocket.SOCK_STREAM)
 print("s", s)
 
+# On lie la socket à l'adresse IP de la pycom sur le réseau sur le port 8080
 s.bind((wlan.ifconfig()[0], 8080))
 
 s.listen(1)
 
 
 """--------------------------------GPS instruction loop-----------------------------------------"""
-
+# Initialiser la lecture du de données I2C
 i2c = machine.I2C(0, mode=I2C.MASTER, pins=('P22', 'P21'))
 scan = i2c.scan()
 addr = scan[1]
 
+# Initialisation des données reçues
 msg_list = []
 prev_inc_end = None
 MSG_TYPE = 'GPGGA'
@@ -101,17 +101,21 @@ while True:
     inc_beg, inc_end, complete_msgs = read_msg(current_frame)
     if prev_inc_end != None:
         msg_list.append(prev_inc_end+inc_beg)
+
     for message in complete_msgs:
         msg_list.append(message)
+
     prev_inc_end = inc_end
 
     msg_list = select_msg_type(msg_list,MSG_TYPE)
+
     if len(msg_list) > 0:                   # checks if list contains at least 1 message
         new_msg = msg_list.pop().split(',') # then reads it
+
         if len(new_msg)>5:                  # checks if the message contains at least latitude and longitude
-            #print(new_msg)
             if (new_msg[2] == '' or new_msg[3] == '' or new_msg[4] == '' or new_msg[5] == ''):  # checks if data is valid
                 print('No GPS data available')
+
             else:
                 coords = [str(float(new_msg[2])/100),new_msg[3],str(float(new_msg[4])/100),new_msg[5]]
                 print(coords)
