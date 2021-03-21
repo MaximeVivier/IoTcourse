@@ -5,3 +5,6 @@
 pymakr.conf
 /flash
 *.png
+/tp_dfa
+/tp_dpa
+._tp_dpa
