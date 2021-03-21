@@ -1,3 +1,5 @@
+# Maxime VIVIER
+# Adrien LAFFARGUE
 import time, machine
 import pycom as pc
 from machine import I2C

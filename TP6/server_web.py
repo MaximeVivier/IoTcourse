@@ -1,3 +1,5 @@
+# Maxime VIVIER
+# Adrien LAFFARGUE
 import machine
 import pycom, sys, time, network, usocket
 import pycom as pc
