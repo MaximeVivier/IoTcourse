@@ -22,10 +22,11 @@ def client_connect(clientsocket):
         # Quand une requête est reçue on l'affiche
         print("Received: {}".format(str(r)))
     
+    # On mesure la tension renvoyée par le potar
     val = apin()
     tension = str(val*3.3/4096)[:3]
     # On créé les headers et le body de la réponse qui est simplement une page HTML avec la map
-    # Le body HTML contient les données de latitude et longitude obtenues au préalable avec le capteur GPS
+    # Le body HTML contient la donnée de tension mesurée précédemment
     http = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection:close \r\n\r\n"
     mapGPS =  '<!DOCTYPE html><html manifest="site.manifest"><head><meta charset="utf-8"><title>Serveur web</title></head><style>body {hight: 100%;} div {display: flex;flex-direction: column;align-items: center;}</style><body><div id="main"><h1>Lopy server</h1><p>Tension ' + tension + ' V</p></div></body></html>'
     # Si la requête faite est une méthode GET, on renvoie la concaténation des headers et du body
@@ -57,9 +58,7 @@ s.bind((wlan.ifconfig()[0], 8080))
 s.listen(1)
 
 while True:
-    # Si les données sont valides on les transforme au bon order de grandeur pour un affichage correct sur la map
     (clientsocket, address) = s.accept()
-    # On met la donnée dans la socket, elle est à disposition de celui qui fait une requête sur la socket
     client_connect(clientsocket)
     print('ok')
 
