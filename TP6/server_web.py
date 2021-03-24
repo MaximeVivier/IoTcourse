@@ -8,12 +8,10 @@ import pycom as pc
 # Désactiver le clignotment de la LED du au fonctionnement classique de la pycom
 pc.heartbeat(False)
 
-"""--------------------------------GPS instruction loop-----------------------------------------"""
 # Initialiser la lecture du de données I2C
 adc = machine.ADC()
 apin = adc.channel(pin='P13',attn=machine.ADC.ATTN_11DB)
 
-"""-------------------------------------Socket functions----------------------------------------------"""
 
 def client_connect(clientsocket):
     r = clientsocket.recv(4096)
@@ -39,7 +37,6 @@ def client_connect(clientsocket):
     clientsocket.close()
 
 
-"""---------------------------------Connection to router and socket-----------------------------------------"""
 # Connection au réseau WIFI en spécifiant le SSID et le mot de passe
 wlan = network.WLAN(mode=network.WLAN.STA)
 
